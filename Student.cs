@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SF_8_Results_Task_4
+namespace FinalTask
 {
     [Serializable]
     class Student
@@ -8,6 +8,7 @@ namespace SF_8_Results_Task_4
         public string Name { get; set; }
         public string Group { get; set; }//Группа
         public DateTime DateOfBirth { get; set; }//Дата рождения
+        //public string DateOfBirth { get; set; }
 
         public Student() { }
 
@@ -17,5 +18,12 @@ namespace SF_8_Results_Task_4
             this.Group = Group;
             this.DateOfBirth = DateOfBirth;
         }
+        
+        /*public Student(string Name, string Group, string DateOfBirth)
+        {
+            this.Name = Name;
+            this.Group = Group;
+            this.DateOfBirth = DateOfBirth;
+        }*/
     }
 }
