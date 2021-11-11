@@ -9,32 +9,92 @@ namespace FinalTask
     {
         static void Main(string[] args)
         {
-            //string pathFolder = "C://Users/user/Desktop/Students";
             string pathFolder = "D://Students";
             string pathBinaryFile = "Students.dat";
             BinaryFormatter formatter = new BinaryFormatter();
-            Student[] students = new Student[50];
 
-            if (File.Exists(pathBinaryFile))//проверяем наличие файла
+            Student[] students = ReadBinaryFile(pathBinaryFile, formatter);
+            List<string> NameGroup = ReadNameGroup(students);
+
+            CreateFolder(pathFolder);
+            CreateFileList(pathFolder, students, NameGroup, formatter);
+        }
+
+        /// <summary>
+        /// Создаёт файлы для каждой группы студентов и записывает их имена и дни рождения.
+        /// Выводит в консоль результат работы.
+        /// </summary>
+        /// <param name="pathFolder"></param>
+        /// <param name="students"></param>
+        /// <param name="nameGroup"></param>
+        /// <param name="formatter"></param>
+        private static void CreateFileList(string pathFolder, Student[] students, List<string> nameGroup, BinaryFormatter formatter)
+        {
+            try
             {
-                try
+                for (int i = 0; i < nameGroup.Count; i++)
                 {
-                    using (FileStream fs = new FileStream(pathBinaryFile, FileMode.Open))
+                    string pathFile = pathFolder + "/ListGroup_" + nameGroup[i] + ".txt";
+
+                    if (File.Exists(pathFile))
+                        File.Delete(pathFile);
+
+                    Console.WriteLine($"Создан файл: {pathFile}");
+                    Console.WriteLine($"\n\tСписок группы № {nameGroup[i]}\n");
+                    Console.WriteLine(" -------------------------------------");
+                    Console.WriteLine("| №  |    Имя    |    День рождения   |");
+                    Console.WriteLine(" -------------------------------------");
+
+                    using (StreamWriter sw = new StreamWriter(File.Open(pathFile, FileMode.Append)))
                     {
-                        students = (Student[])formatter.Deserialize(fs);//читаем в массив
-                    }
-                }
-                catch (Exception ex)
-                {
-                    Console.WriteLine("FileStream: " + ex.Message);
-                }
-            }
-            else
-            {
-                throw new FileNotFoundException("По указанному пути файл отсутствует.");
-            }
+                        int numPP = 1;
 
-            //формируем список групп 
+                        for (int y = 0; y < students.Length; y++)
+                        {
+                            if (students[y].Group == nameGroup[i])
+                            {
+                                sw.WriteLine(students[y].Name + ", " + students[y].DateOfBirth);
+                                Console.WriteLine("| {0, -3}| {1, -10}| {2, -19}|", numPP + ".", students[y].Name, students[y].DateOfBirth);
+                                numPP++;
+                            }
+                        }
+                    }
+                    Console.WriteLine(" -------------------------------------");
+                    Console.WriteLine("\n");
+                }
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine("CreateFileList: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Создаёт новую папку.
+        /// </summary>
+        /// <param name="pathFolder"></param>
+        private static void CreateFolder(string pathFolder)
+        {
+            try
+            {
+                DirectoryInfo di = new DirectoryInfo(pathFolder);
+
+                if (!di.Exists)//если папки нет, то создаём
+                    di.Create();
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine("CreateFolder: " + ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Формирует список уникальных значений номеров групп студентов.
+        /// </summary>
+        /// <param name="students"></param>
+        /// <returns>List</returns>
+        private static List<string> ReadNameGroup(Student[] students)
+        {
             List<string> NameGroup = new List<string>();
 
             foreach (var st in students)
@@ -50,53 +110,40 @@ namespace FinalTask
                 if (!flag)
                     NameGroup.Add(st.Group);
             }
+            NameGroup.Sort();
+            return NameGroup;
+        }
 
-            DirectoryInfo di = new DirectoryInfo(pathFolder);
+        /// <summary>
+        /// Десериализует бинарный файл в массив типов Student.
+        /// </summary>
+        /// <param name="pathBinaryFile">путь к файлу</param>
+        /// <param name="formatter"></param>
+        /// <returns>Student[]</returns>
+        private static Student[] ReadBinaryFile(string pathBinaryFile, BinaryFormatter formatter)
+        {
+            Student[] students = new Student[50];
+            BinaryFormatter formatter_ = formatter;
 
-            if (!di.Exists)//если папки нет, то создаём
-                di.Create();
-
-            //создадим файлы для каждой группы
-            for (int i = 0; i < NameGroup.Count; i++)
+            if (File.Exists(pathBinaryFile))//проверяем наличие файла
             {
-                string pathFile = pathFolder + "/ListGroup_" + NameGroup[i] + ".txt";
-
-                if (File.Exists(pathFile))
-                    File.Create(pathFile);
-                else
-                    File.Delete(pathFile);
-
-                //добавим в него необходимые данные
-                foreach (var st in students)
+                try
                 {
-                    if (st.Group == NameGroup[i])
+                    using (FileStream fs = new FileStream(pathBinaryFile, FileMode.Open))
                     {
-                        try
-                        {
-                            using (StreamWriter sw = new StreamWriter(File.Open(pathFile, FileMode.Append)))
-                            {
-                                sw.WriteLine(st.Name + ", " + st.DateOfBirth);
-                                sw.Close();
-                            }
-                        }
-                        catch(Exception ex)
-                        {
-                            Console.WriteLine("Запись данных в файл: " + ex.Message);
-                        }
+                        students = (Student[])formatter_.Deserialize(fs);//читаем в массив
                     }
                 }
+                catch (Exception ex)
+                {
+                    Console.WriteLine("ReadBinaryFile: " + ex.Message);
+                }
             }
-            foreach (var s in students)
+            else
             {
-                Console.WriteLine($"Имя: {s.Name}, Группа: {s.Group}, ДР: {s.DateOfBirth}");
+                throw new FileNotFoundException("По указанному пути файл отсутствует.");
             }
-
-            Console.WriteLine("Группы: ");
-            for (int i = 0; i < NameGroup.Count; i++)
-            {
-
-                Console.WriteLine(NameGroup[i]);
-            }
+            return students;
         }
     }
 }
